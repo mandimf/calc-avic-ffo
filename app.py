@@ -4,14 +4,21 @@ st.set_page_config(page_title="Calculadora Integrada: Avicultura & FFO", layout=
 
 st.title("🐔 Calculadora Integrada de Produção")
 st.markdown("### Avicultura & Graxaria (FFO)")
-st.write("Ajuste as premissas e preencha **apenas um** dos campos de entrada de volume para calcular automaticamente toda a cadeia produtiva em cascata.")
+st.write("Ajuste as premissas e rendimentos da FFO, e preencha **apenas um** dos campos de entrada de volume para calcular automaticamente toda a cadeia produtiva em cascata.")
 
-# Barra lateral para premissas fixas editáveis
+# Barra lateral para premissas fixas e rendimentos da FFO editáveis
 st.sidebar.header("⚙️ Premissas Fixas Editáveis")
 pv_ave = st.sidebar.number_input("Peso Médio Vivo por Ave (kg)", value=3.00, step=0.1)
 cr_ave = st.sidebar.number_input("Consumo de Ração por Ave (kg)", value=5.00, step=0.1)
 dias_mes = st.sidebar.number_input("Dias Operacionais no Mês", value=25, step=1)
 fator_mp = st.sidebar.number_input("Fator MP Bruta (% do Peso Vivo)", value=0.30, step=0.01, format="%.2f")
+
+st.sidebar.divider()
+st.sidebar.header("🏭 Rendimentos FFO (% s/ MP Bruta)")
+pct_agua = st.sidebar.slider("Água Evaporada (Quebra)", min_value=0.0, max_value=0.8, value=0.523, step=0.005, format="%.3f")
+pct_fv = st.sidebar.slider("Farinha de Vísceras (FV)", min_value=0.0, max_value=0.5, value=0.250, step=0.005, format="%.3f")
+pct_oleo = st.sidebar.slider("Óleo de Frango", min_value=0.0, max_value=0.3, value=0.127, step=0.005, format="%.3f")
+pct_fps = st.sidebar.slider("Farinha de Penas e Sangue (FPS)", min_value=0.0, max_value=0.3, value=0.100, step=0.005, format="%.3f")
 
 st.divider()
 st.header("📥 Dados de Entrada (Preencha apenas 1 campo)")
@@ -46,11 +53,11 @@ else:
 
 pv_dia = (abate_dia * pv_ave) / 1000.0
 
-# Balanço de Massa FFO (Base: 100% da MP Bruta)
-agua_dia = mp_dia * 0.523
-fv_dia = mp_dia * 0.250
-oleo_dia = mp_dia * 0.127
-fps_dia = mp_dia * 0.100
+# Balanço de Massa FFO dinâmico com base nos sliders da barra lateral
+agua_dia = mp_dia * pct_agua
+fv_dia = mp_dia * pct_fv
+oleo_dia = mp_dia * pct_oleo
+fps_dia = mp_dia * pct_fps
 acabado_dia = fv_dia + oleo_dia + fps_dia
 
 st.divider()
@@ -68,11 +75,11 @@ with tab_diario:
         st.metric("MP Bruta FFO Diária", f"{mp_dia:,.2f} t")
     
     st.subheader("Balanço de Massa FFO (Diário)")
-    st.write(f"- **Água Evaporada (Quebra):** {agua_dia:,.2f} t *(52,3%)*")
-    st.write(f"- **Farinha de Vísceras (FV):** {fv_dia:,.2f} t *(25,0%)*")
-    st.write(f"- **Óleo de Frango:** {oleo_dia:,.2f} t *(12,7%)*")
-    st.write(f"- **Farinha de Penas e Sangue (FPS):** {fps_dia:,.2f} t *(10,0%)*")
-    st.success(f"**Total de Produtos Acabados FFO:** {acabado_dia:,.2f} t *(47,7%)*")
+    st.write(f"- **Água Evaporada (Quebra):** {agua_dia:,.2f} t *({pct_agua*100:.1f}%)*")
+    st.write(f"- **Farinha de Vísceras (FV):** {fv_dia:,.2f} t *({pct_fv*100:.1f}%)*")
+    st.write(f"- **Óleo de Frango:** {oleo_dia:,.2f} t *({pct_oleo*100:.1f}%)*")
+    st.write(f"- **Farinha de Penas e Sangue (FPS):** {fps_dia:,.2f} t *({pct_fps*100:.1f}%)*")
+    st.success(f"**Total de Produtos Acabados FFO:** {acabado_dia:,.2f} t *({(pct_fv+pct_oleo+pct_fps)*100:.1f}%)*")
 
 with tab_mensal:
     col_c, col_d = st.columns(2)
